@@ -201,9 +201,9 @@ def detect(bbox, tile_url, mode="lines", gap_close=3, min_area_m2=30.0,
 
 # ---------------- Vector mode (OSM / Overpass) ----------------
 OVERPASS_URLS = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.private.coffee/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass-api.de/api/interpreter",                     # main public instance
+    "https://overpass.private.coffee/api/interpreter",             # (formerly overpass.kumi.systems)
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",     # worldwide mirror, ~1 min behind
 ]
 MAX_VECTOR_KM2 = 2.0
 ON_VERCEL = bool(os.environ.get("VERCEL"))
