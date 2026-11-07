@@ -161,7 +161,13 @@ async function api(url, opts) {
   const res = await fetch(url, opts);
   let data = {};
   try { data = await res.json(); } catch (e) { /* non-JSON error page */ }
-  if (!res.ok) throw new Error(data.error || ('Server error ' + res.status));
+  if (!res.ok) {
+    let msg = data.error;
+    if (!msg) msg = (res.status === 504 || res.status === 502)
+      ? 'The server timed out (the OpenStreetMap data service may be busy). Please try again, or select a smaller area.'
+      : 'Server error ' + res.status;
+    throw new Error(msg);
+  }
   return data;
 }
 const postJson = (url, body) => api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

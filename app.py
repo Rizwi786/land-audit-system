@@ -206,20 +206,36 @@ OVERPASS_URLS = [
     "https://overpass.kumi.systems/api/interpreter",
 ]
 MAX_VECTOR_KM2 = 2.0
+OVERPASS_QUERY_TIMEOUT = 18   # seconds a server may spend on our query
+OVERPASS_BUDGET = 48          # total seconds for ALL servers incl. connect time (Vercel limit is 60 s)
 
 
 def fetch_overpass(query):
-    """POST an Overpass query (tries several public servers). Replaced by a mock in tests."""
+    """POST an Overpass query. Tries several public servers inside a fixed time budget
+    so a slow server cannot use up the whole serverless time limit. Replaced by a mock in tests."""
     errors = []
+    deadline = time.time() + OVERPASS_BUDGET
     for url in OVERPASS_URLS:
+        host = url.split("/")[2]
+        remaining = deadline - time.time()
+        if remaining < 11:                      # not enough time left for another attempt
+            errors.append("time budget used up")
+            break
         try:
-            r = requests.post(url, data={"data": query}, headers=HEADERS, timeout=70)
-            if r.status_code == 200:
-                return r.json()
-            errors.append(f"{url.split('/')[2]}: HTTP {r.status_code}")
+            r = requests.post(url, data={"data": query}, headers=HEADERS,
+                              timeout=(5, min(OVERPASS_QUERY_TIMEOUT + 3, remaining - 5)))
+            if r.status_code != 200:
+                errors.append(f"{host}: HTTP {r.status_code}")
+                continue
+            data = r.json()
+            if "runtime error" in str(data.get("remark", "")).lower():   # server gave up on the query
+                errors.append(f"{host}: query timed out")
+                continue
+            return data
         except (requests.RequestException, ValueError) as ex:
-            errors.append(f"{url.split('/')[2]}: {type(ex).__name__}")
-    raise RuntimeError("All Overpass servers failed (" + "; ".join(errors) + "). Try again in a minute.")
+            errors.append(f"{host}: {type(ex).__name__}")
+    raise RuntimeError("The OpenStreetMap data service is busy (" + "; ".join(errors) +
+                       "). Try again in a minute, or select a smaller area.")
 
 
 def _ring(geom):
@@ -272,7 +288,7 @@ def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
                f'relation["landuse"~"residential|commercial|retail|industrial|institutional|education"]{bb};')
     else:
         sel = f'way["building"]{bb};relation["building"]{bb};'
-    data = fetch_overpass(f"[out:json][timeout:50];({sel});out geom;")
+    data = fetch_overpass(f"[out:json][timeout:{OVERPASS_QUERY_TIMEOUT}];({sel});out geom;")
 
     items = []
     for el in data.get("elements", []):
