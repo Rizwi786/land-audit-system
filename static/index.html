@@ -174,7 +174,8 @@ const postJson = (url, body) => api(url, { method: 'POST', headers: { 'Content-T
 
 // ---------- plots ----------
 function tipText(p) {
-  const lab = p.props.label ? ' · ' + esc(p.props.label) : '';
+  const L0 = String(p.props.label || '');
+  const lab = L0 ? ' · ' + esc(L0.length > 16 ? L0.slice(0, 15) + '…' : L0) : '';
   return esc(p.id.replace('PLOT-', 'P')) + lab;
 }
 
@@ -312,16 +313,57 @@ function applyCustom() {
   if (url) customLayer = L.tileLayer(url, { maxNativeZoom: 20, maxZoom: 23 }).addTo(map);
 }
 
+// ---------- Overpass (OpenStreetMap data) fetched by the browser ----------
+async function overpassFromBrowser(query, urls) {
+  const errors = []; let allNetwork = true;
+  for (const url of urls) {
+    const host = new URL(url).host;
+    const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 35000);
+    try {
+      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal: ctrl.signal });
+      if (!r.ok) { errors.push(host + ': HTTP ' + r.status); allNetwork = false; continue; }
+      const j = await r.json();
+      if (String(j.remark || '').toLowerCase().includes('runtime error')) { errors.push(host + ': query timed out'); allNetwork = false; continue; }
+      return j;
+    } catch (e) {
+      if (e.name === 'AbortError') { errors.push(host + ': timeout'); allNetwork = false; }
+      else errors.push(host + ': network/blocked');
+    } finally { clearTimeout(timer); }
+  }
+  const err = new Error('The OpenStreetMap data service is busy (' + errors.join('; ') + '). Try again in a minute, or select a smaller area.');
+  err.networkOnly = allNetwork;
+  throw err;
+}
+
 // ---------- auto detect ----------
 $('detect').addEventListener('click', async () => {
   if (!bbox) return;
   $('detect').disabled = true; setStatus('Detecting plots… (the OpenStreetMap server can take up to a minute)');
   try {
-    const data = await postJson('/api/detect', {
+    const mode = $('mode').value;
+    const serverDetect = () => postJson('/api/detect', {
       bbox, source: $('source').value, custom_url: $('customUrl').value.trim(),
-      mode: $('mode').value, gap_close: +$('gap').value,
+      mode, gap_close: +$('gap').value,
       min_area_m2: +$('minArea').value, max_area_m2: +$('maxArea').value
     });
+    let data;
+    if (mode.startsWith('vector')) {
+      // OSM data: the browser asks the Overpass servers directly (own IP, no serverless time limit);
+      // the server then turns the result into polygons, IDs and areas.
+      try {
+        const q = await postJson('/api/vector_query', { bbox, mode });
+        setStatus('Asking the OpenStreetMap servers… (can take up to a minute)');
+        const raw = await overpassFromBrowser(q.query, q.urls);
+        setStatus('Processing polygons…');
+        data = await postJson('/api/vector_parse', { bbox, mode, data: raw });
+      } catch (err) {
+        if (!err.networkOnly) throw err;
+        setStatus('Browser could not reach OSM directly; trying through the server…');
+        data = await serverDetect();            // fallback (e.g. a firewall blocks the browser)
+      }
+    } else {
+      data = await serverDetect();
+    }
     // replace previous (unedited) auto-detected plots, keep traced / imported / edited ones
     plots.filter(p => p.props.status === 'auto_detected' && !p.props.edited).forEach(p => { plotsGroup.removeLayer(p.layer); });
     plots = plots.filter(p => !(p.props.status === 'auto_detected' && !p.props.edited));

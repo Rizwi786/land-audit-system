@@ -272,16 +272,20 @@ def _element_polygons(el):
     return []
 
 
-def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
+def _utm_for_bbox(bbox):
     w, s, e, n = bbox
-    lat_c = (s + n) / 2
-    epsg = utm_epsg_for((w + e) / 2, lat_c)
-    to_utm = Transformer.from_crs(4326, epsg, always_xy=True).transform
+    epsg = utm_epsg_for((w + e) / 2, (s + n) / 2)
+    return Transformer.from_crs(4326, epsg, always_xy=True).transform
+
+
+def build_overpass_query(bbox, kind="building", timeout=25):
+    """Validate the area and return the Overpass query text for this rectangle."""
+    w, s, e, n = bbox
+    to_utm = _utm_for_bbox(bbox)
     box_m = shapely.transform(shapely.box(w, s, e, n),
                               lambda a: np.column_stack(to_utm(a[:, 0], a[:, 1])))
     if box_m.area / 1e6 > MAX_VECTOR_KM2:
         raise RuntimeError(f"Area too large ({box_m.area/1e6:.1f} km2). Select under {MAX_VECTOR_KM2} km2.")
-
     bb = f"({s},{w},{n},{e})"
     if kind == "plot":
         sel = f'way["place"="plot"]{bb};relation["place"="plot"]{bb};'
@@ -290,8 +294,13 @@ def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
         sel = f'way["landuse"~"residential|commercial|retail|industrial|institutional|education"]{bb};'
     else:
         sel = f'way["building"]{bb};relation["building"]{bb};'
-    data = fetch_overpass(f"[out:json][timeout:{OVERPASS_QUERY_TIMEOUT}];({sel});out geom qt;")
+    return f"[out:json][timeout:{timeout}];({sel});out geom qt;"
 
+
+def parse_vector(bbox, kind, data, id_prefix="PLOT-"):
+    """Turn an Overpass JSON response into plots (IDs, areas). Works on data fetched by the
+    server OR by the user's browser."""
+    to_utm = _utm_for_bbox(bbox)
     items = []
     for el in data.get("elements", []):
         for poly in _element_polygons(el):
@@ -327,6 +336,11 @@ def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
     return {"type": "FeatureCollection", "features": feats, "n_plots": len(feats), "mode": "vector",
             "total_area_sqm": round(total, 2), "warnings": []}
 
+
+def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
+    """Server-side route: build the query, fetch it from Overpass, parse it."""
+    query = build_overpass_query(bbox, kind, OVERPASS_QUERY_TIMEOUT)
+    return parse_vector(bbox, kind, fetch_overpass(query), id_prefix)
 
 
 # ---------------- Measure + Import ----------------
@@ -538,6 +552,32 @@ def api_detect():
     except Exception as ex:                             # keep the UI informative
         return jsonify(error=str(ex)), 500
 
+
+
+def _mode_kind(mode):
+    return {"vector_landuse": "landuse", "vector_plot": "plot"}.get(mode, "building")
+
+
+@app.route("/api/vector_query", methods=["POST"])
+def api_vector_query():
+    """Step 1 of browser-side fetching: give the browser the query and the server list."""
+    d = request.get_json(force=True)
+    try:
+        bbox = [float(v) for v in d["bbox"]]
+        return jsonify(query=build_overpass_query(bbox, _mode_kind(d.get("mode")), 25), urls=OVERPASS_URLS)
+    except Exception as ex:
+        return jsonify(error=str(ex)), 400
+
+
+@app.route("/api/vector_parse", methods=["POST"])
+def api_vector_parse():
+    """Step 2: the browser sends back the Overpass JSON; we compute polygons, IDs and areas."""
+    d = request.get_json(force=True)
+    try:
+        bbox = [float(v) for v in d["bbox"]]
+        return jsonify(parse_vector(bbox, _mode_kind(d.get("mode")), d["data"]))
+    except Exception as ex:
+        return jsonify(error=str(ex)), 500
 
 
 @app.route("/api/measure", methods=["POST"])
