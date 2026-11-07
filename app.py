@@ -490,9 +490,13 @@ def healthz():
     return "ok"
 
 
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+
+
 @app.route("/")
 def index():
-    return send_from_directory("static", "index.html")
+    # served by Flask (not the CDN) so the password gate protects the page too
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
 @app.route("/api/detect", methods=["POST"])

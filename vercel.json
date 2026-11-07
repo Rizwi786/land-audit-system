@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app.py": {
+      "includeFiles": "static/**",
+      "excludeFiles": "{**/test_*.py,make_sample_map.py,samples/**,output/**,Dockerfile,README.md,run.bat}",
+      "maxDuration": 60
+    }
+  }
+}
