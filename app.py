@@ -206,8 +206,10 @@ OVERPASS_URLS = [
     "https://overpass.kumi.systems/api/interpreter",
 ]
 MAX_VECTOR_KM2 = 2.0
-OVERPASS_QUERY_TIMEOUT = 18   # seconds a server may spend on our query
-OVERPASS_BUDGET = 48          # total seconds for ALL servers incl. connect time (Vercel limit is 60 s)
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+# Vercel kills a function after 60 s, so keep the whole attempt under it; locally allow much longer
+OVERPASS_QUERY_TIMEOUT = 18 if ON_VERCEL else 60   # seconds a server may spend on our query
+OVERPASS_BUDGET = 48 if ON_VERCEL else 150         # total seconds for ALL servers incl. connect time
 
 
 def fetch_overpass(query):
@@ -284,11 +286,11 @@ def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
     if kind == "plot":
         sel = f'way["place"="plot"]{bb};relation["place"="plot"]{bb};'
     elif kind == "landuse":
-        sel = (f'way["landuse"~"residential|commercial|retail|industrial|institutional|education"]{bb};'
-               f'relation["landuse"~"residential|commercial|retail|industrial|institutional|education"]{bb};')
+        # ways only: land-use relations can be city-wide multipolygons and make the query very slow
+        sel = f'way["landuse"~"residential|commercial|retail|industrial|institutional|education"]{bb};'
     else:
         sel = f'way["building"]{bb};relation["building"]{bb};'
-    data = fetch_overpass(f"[out:json][timeout:{OVERPASS_QUERY_TIMEOUT}];({sel});out geom;")
+    data = fetch_overpass(f"[out:json][timeout:{OVERPASS_QUERY_TIMEOUT}];({sel});out geom qt;")
 
     items = []
     for el in data.get("elements", []):

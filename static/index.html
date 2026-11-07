@@ -315,7 +315,7 @@ function applyCustom() {
 // ---------- auto detect ----------
 $('detect').addEventListener('click', async () => {
   if (!bbox) return;
-  $('detect').disabled = true; setStatus('Detecting plots…');
+  $('detect').disabled = true; setStatus('Detecting plots… (the OpenStreetMap server can take up to a minute)');
   try {
     const data = await postJson('/api/detect', {
       bbox, source: $('source').value, custom_url: $('customUrl').value.trim(),
