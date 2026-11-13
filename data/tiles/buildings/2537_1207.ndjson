@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.748989,30.719541],[73.749481,30.719771],[73.749542,30.719023],[73.749001,30.719027],[73.748989,30.719541]]]},"properties":{"osm_id":"1258249407","name":"","type":"building","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.737973,30.714974],[73.738027,30.715812],[73.738288,30.715808],[73.738254,30.714967],[73.737973,30.714974]]]},"properties":{"osm_id":"1541290303","name":"","type":"building","layer":"buildings"}}

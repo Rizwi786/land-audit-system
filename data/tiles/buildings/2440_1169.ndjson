@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[64.094339,26.99841],[64.094342,26.9986],[64.09442,26.998599],[64.094416,26.998409],[64.094339,26.99841]]]},"properties":{"osm_id":"1291222856","name":"","type":"building","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[64.085688,26.996244],[64.08591,26.99625],[64.085922,26.99591],[64.0857,26.995904],[64.085688,26.996244]]]},"properties":{"osm_id":"1291222858","name":"","type":"mosque","layer":"buildings"}}

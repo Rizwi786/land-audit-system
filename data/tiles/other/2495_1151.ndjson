@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[69.564771,25.175909],[69.564776,25.176095],[69.565019,25.176095],[69.565027,25.175909],[69.564771,25.175909]]]},"properties":{"osm_id":"1459174071","name":"","type":"muslim_sunni","layer":"pofw"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[69.565766,25.178771],[69.566614,25.178777],[69.566675,25.177475],[69.56577,25.177478],[69.565766,25.178771]]]},"properties":{"osm_id":"1368118482","name":"Khalid Colony Park","type":"park","layer":"pois"}}

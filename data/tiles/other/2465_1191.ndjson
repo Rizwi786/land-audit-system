@@ -1,0 +1,3 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.545918,29.114963],[66.54599,29.115199],[66.546299,29.115126],[66.546227,29.114891],[66.545918,29.114963]]]},"properties":{"osm_id":"622843678","name":"","type":"reservoir","layer":"water"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.540046,29.105556],[66.540185,29.105857],[66.540412,29.105781],[66.5403,29.105507],[66.540046,29.105556]]]},"properties":{"osm_id":"622843680","name":"","type":"reservoir","layer":"water"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.547067,29.113401],[66.547241,29.113443],[66.547281,29.113316],[66.547107,29.113274],[66.547067,29.113401]]]},"properties":{"osm_id":"622843683","name":"","type":"reservoir","layer":"water"}}

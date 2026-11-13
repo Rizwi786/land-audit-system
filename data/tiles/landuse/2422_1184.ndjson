@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[62.260089,28.455716],[62.260359,28.456048],[62.260541,28.456012],[62.260647,28.455945],[62.26062,28.455562],[62.260089,28.455716]]]},"properties":{"osm_id":"860430658","name":"","type":"military","layer":"landuse"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[62.199742,28.468309],[62.20019,28.469136],[62.201448,28.468329],[62.201131,28.467622],[62.199742,28.468309]]]},"properties":{"osm_id":"860430659","name":"","type":"military","layer":"landuse"}}

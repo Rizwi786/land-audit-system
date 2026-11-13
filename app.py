@@ -208,6 +208,9 @@ OVERPASS_URLS = [
 MAX_VECTOR_KM2 = 2.0
 ON_VERCEL = bool(os.environ.get("VERCEL"))
 # Vercel kills a function after 60 s, so keep the whole attempt under it; locally allow much longer
+ALL_KEYS = ("building", "landuse", "amenity", "shop", "leisure", "natural", "place", "man_made", "power", "tourism",
+            "office", "craft", "military", "historic", "healthcare", "sport", "industrial", "public_transport",
+            "aeroway", "emergency", "boundary")
 OVERPASS_QUERY_TIMEOUT = 18 if ON_VERCEL else 60   # seconds a server may spend on our query
 OVERPASS_BUDGET = 48 if ON_VERCEL else 150         # total seconds for ALL servers incl. connect time
 
@@ -287,7 +290,12 @@ def build_overpass_query(bbox, kind="building", timeout=25):
     if box_m.area / 1e6 > MAX_VECTOR_KM2:
         raise RuntimeError(f"Area too large ({box_m.area/1e6:.1f} km2). Select under {MAX_VECTOR_KM2} km2.")
     bb = f"({s},{w},{n},{e})"
-    if kind == "plot":
+    if kind == "all":
+        # every closed shape that carries a real feature tag (untagged ring-parts and roads are skipped)
+        keys = ("building|landuse|amenity|shop|leisure|natural|place|man_made|power|tourism|office|craft|military|"
+                "historic|healthcare|sport|industrial|public_transport|aeroway|emergency|boundary")
+        sel = f'way{bb}[~"^({keys})$"~"."];relation{bb}["type"="multipolygon"][~"^({keys})$"~"."];'
+    elif kind == "plot":
         sel = f'way["place"="plot"]{bb};relation["place"="plot"]{bb};'
     elif kind == "landuse":
         # ways only: land-use relations can be city-wide multipolygons and make the query very slow
@@ -300,16 +308,30 @@ def build_overpass_query(bbox, kind="building", timeout=25):
 def parse_vector(bbox, kind, data, id_prefix="PLOT-"):
     """Turn an Overpass JSON response into plots (IDs, areas). Works on data fetched by the
     server OR by the user's browser."""
+    raw = []
+    for el in data.get("elements", []):
+        tags = el.get("tags", {})
+        if kind == "all":                       # show what the shape is, e.g. "landuse=industrial"
+            summary = next((f"{k}={tags[k]}" for k in ALL_KEYS if k in tags), "")
+            tags = dict(tags, name=(f'{tags.get("name")} ({summary})' if tags.get("name") else summary))
+        for poly in _element_polygons(el):
+            raw.append((poly, f'{el["type"]}/{el["id"]}', tags))
+    return _features_from_polys(bbox, kind, raw, id_prefix)
+
+
+def _features_from_polys(bbox, kind, raw, id_prefix="PLOT-", source="osm"):
+    """raw = [(lon/lat polygon, osm_id, tags)] -> GeoJSON plots with reading-order IDs and areas."""
     to_utm = _utm_for_bbox(bbox)
     items = []
-    for el in data.get("elements", []):
-        for poly in _element_polygons(el):
-            geo_m = shapely.transform(poly, lambda a: np.column_stack(to_utm(a[:, 0], a[:, 1])))
-            if geo_m.area < 1:
-                continue
-            tags = el.get("tags", {})
-            items.append((poly, geo_m, f'{el["type"]}/{el["id"]}', tags))
+    for poly, osm_id, tags in raw:
+        geo_m = shapely.transform(poly, lambda a: np.column_stack(to_utm(a[:, 0], a[:, 1])))
+        if geo_m.area < 1:
+            continue
+        items.append((poly, geo_m, osm_id, tags))
     if not items:
+        if source == "local":
+            return {"type": "FeatureCollection", "features": [], "n_plots": 0, "mode": "vector",
+                    "warnings": ["No polygons in your local data for this area. Is the area inside the extract you prepared?"]}
         return {"type": "FeatureCollection", "features": [], "n_plots": 0, "mode": "vector",
                 "warnings": [{"plot": "No place=plot polygons here. Numbered dotted lines on OSM are usually address ranges, not plots. Try 'buildings'.",
                                       "landuse": "No land-use polygons here. Try 'buildings' or a larger area.",
@@ -335,6 +357,48 @@ def parse_vector(bbox, kind, data, id_prefix="PLOT-"):
         feats.append({"type": "Feature", "properties": props, "geometry": mapping(geo)})
     return {"type": "FeatureCollection", "features": feats, "n_plots": len(feats), "mode": "vector",
             "total_area_sqm": round(total, 2), "warnings": []}
+
+
+MAX_LOCAL_RESULTS = 8000
+OTHER_SKIP_LAYERS = {"adminareas", "protected_areas", "places"}   # boundaries / localities, never plots
+MAX_OTHER_AREA_M2 = 1_000_000
+
+
+def detect_local(bbox, kind="building", id_prefix="PLOT-"):
+    """Polygons from the local data file (data/*.geojson): fast, offline, no rate limits."""
+    import local_data
+    if not local_data.available(kind):
+        raise RuntimeError("No local data found. Run build_pakistan_tiles.py once (whole country) "
+                           "or prepare_local_data.py (one area), then restart the app. See README.")
+    found = local_data.query(kind, bbox)
+    hidden = 0
+    if kind == "other":
+        # administrative boundaries, parks, localities and anything bigger than ~1 km2 are not plots
+        to_utm = _utm_for_bbox(bbox)
+        kept = []
+        for g, p in found:
+            big = shapely.transform(g, lambda c: np.column_stack(to_utm(c[:, 0], c[:, 1]))).area > MAX_OTHER_AREA_M2
+            if p.get("layer") in OTHER_SKIP_LAYERS or big:
+                hidden += 1
+            else:
+                kept.append((g, p))
+        found = kept
+    if len(found) > MAX_LOCAL_RESULTS:
+        raise RuntimeError(f"{len(found)} polygons in this rectangle: select a smaller area (limit {MAX_LOCAL_RESULTS}).")
+    key = {"landuse": "landuse", "other": "other"}.get(kind, "building")
+    raw = []
+    for g, p in found:
+        name = p.get("name") or ""
+        if kind == "other":      # say what the shape is: "<layer>: <type>" (e.g. "pois: supermarket")
+            kind_txt = " ".join(x for x in (p.get("layer"), p.get("type")) if x).replace(" ", ": ", 1)
+            name = f"{name} ({kind_txt})" if name else kind_txt
+        tags = {key: p.get("type") or "yes", "name": name}
+        for poly in local_data.polygons(g):
+            raw.append((poly, f'local/{p.get("osm_id", "")}', tags))
+    res = _features_from_polys(bbox, kind, raw, id_prefix, source="local")
+    if hidden:
+        res["warnings"] = list(res.get("warnings", [])) + [f"{hidden} very large area(s) (boundaries, parks, localities) hidden."]
+    return res
 
 
 def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
@@ -516,6 +580,7 @@ def nominatim_search(q, lat=None, lon=None):
     return out
 
 
+
 # ---------------- Routes ----------------
 @app.route("/healthz")
 def healthz():
@@ -536,8 +601,10 @@ def api_detect():
     d = request.get_json(force=True)
     try:
         bbox = [float(v) for v in d["bbox"]]           # west, south, east, north
+        if str(d.get("mode", "")).startswith("local"):
+            return jsonify(detect_local(bbox, {"local_landuse": "landuse", "local_other": "other"}.get(d["mode"], "building")))
         if str(d.get("mode", "")).startswith("vector"):
-            kind = {"vector_landuse": "landuse", "vector_plot": "plot"}.get(d["mode"], "building")
+            kind = {"vector_landuse": "landuse", "vector_plot": "plot", "vector_all": "all"}.get(d["mode"], "building")
             return jsonify(detect_vector(bbox, kind))
         src = d.get("source", "osm")
         url = d.get("custom_url") if src == "custom" else TILE_SOURCES.get(src)
@@ -555,7 +622,7 @@ def api_detect():
 
 
 def _mode_kind(mode):
-    return {"vector_landuse": "landuse", "vector_plot": "plot"}.get(mode, "building")
+    return {"vector_landuse": "landuse", "vector_plot": "plot", "vector_all": "all"}.get(mode, "building")
 
 
 @app.route("/api/vector_query", methods=["POST"])
@@ -578,6 +645,15 @@ def api_vector_parse():
         return jsonify(parse_vector(bbox, _mode_kind(d.get("mode")), d["data"]))
     except Exception as ex:
         return jsonify(error=str(ex)), 500
+
+
+@app.route("/api/capabilities")
+def api_capabilities():
+    import local_data
+    idx = local_data.tile_index()
+    return jsonify(local_building=local_data.available("building"), local_landuse=local_data.available("landuse"),
+                   local_other=local_data.available("other"), tiles=bool(idx),
+                   tile_count=sum(len(v) for v in idx["kinds"].values()) if idx else 0)
 
 
 @app.route("/api/measure", methods=["POST"])

@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.582858,33.341803],[72.583531,33.34265],[72.584124,33.342361],[72.583923,33.342124],[72.584478,33.341837],[72.583998,33.341189],[72.582858,33.341803]]]},"properties":{"osm_id":"612176327","name":"Dhurnal Plant","type":"industrial","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.559886,33.381751],[72.559943,33.381753],[72.559947,33.381689],[72.559891,33.381686],[72.559886,33.381751]]]},"properties":{"osm_id":"1227302491","name":"","type":"building","layer":"buildings"}}

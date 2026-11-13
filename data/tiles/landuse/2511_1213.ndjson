@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[71.140359,31.303411],[71.140397,31.308567],[71.147297,31.308784],[71.147354,31.303427],[71.140359,31.303411]]]},"properties":{"osm_id":"241871454","name":"","type":"residential","layer":"landuse"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[71.113462,31.308414],[71.119129,31.308478],[71.119148,31.303299],[71.113537,31.303218],[71.113462,31.308414]]]},"properties":{"osm_id":"241871456","name":"","type":"residential","layer":"landuse"}}

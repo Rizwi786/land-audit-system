@@ -1,0 +1,3 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[63.180431,26.669784],[63.181067,26.669952],[63.1813,26.669383],[63.180863,26.669234],[63.180431,26.669784]]]},"properties":{"osm_id":"912670074","name":"","type":"park","layer":"pois"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[63.161441,26.652187],[63.161496,26.652391],[63.161743,26.652282],[63.161699,26.652126],[63.161441,26.652187]]]},"properties":{"osm_id":"626566701","name":"","type":"reservoir","layer":"water"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[63.14851,26.659968],[63.148672,26.660039],[63.14878,26.659842],[63.148618,26.659771],[63.14851,26.659968]]]},"properties":{"osm_id":"626566705","name":"","type":"reservoir","layer":"water"}}

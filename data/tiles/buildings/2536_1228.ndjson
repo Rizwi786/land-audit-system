@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.672581,32.84905],[73.672622,32.849127],[73.672693,32.849089],[73.672647,32.849016],[73.672581,32.84905]]]},"properties":{"osm_id":"1066170899","name":"Raj Haweli","type":"building","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.672401,32.848922],[73.672476,32.849088],[73.672647,32.849016],[73.672595,32.848864],[73.672401,32.848922]]]},"properties":{"osm_id":"1066171815","name":"Deera","type":"building","layer":"buildings"}}

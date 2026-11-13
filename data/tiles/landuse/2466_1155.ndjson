@@ -1,0 +1,3 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.631242,25.56319],[66.634171,25.564342],[66.634682,25.562913],[66.631719,25.561823],[66.631242,25.56319]]]},"properties":{"osm_id":"405404125","name":"","type":"residential","layer":"landuse"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.656899,25.517614],[66.659222,25.518435],[66.659794,25.517119],[66.657471,25.516298],[66.656899,25.517614]]]},"properties":{"osm_id":"405404127","name":"","type":"farmyard","layer":"landuse"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.653899,25.513783],[66.656822,25.514648],[66.657319,25.513283],[66.654395,25.512417],[66.653899,25.513783]]]},"properties":{"osm_id":"405404128","name":"","type":"farmyard","layer":"landuse"}}

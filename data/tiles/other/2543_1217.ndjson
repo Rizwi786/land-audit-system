@@ -1,0 +1,3 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.392389,31.718624],[74.39281,31.71863],[74.392835,31.718025],[74.392421,31.717944],[74.392389,31.718624]]]},"properties":{"osm_id":"1244563248","name":"","type":"fuel","layer":"traffic"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.389473,31.717811],[74.389975,31.717833],[74.39,31.717408],[74.389476,31.717324],[74.389473,31.717811]]]},"properties":{"osm_id":"1244563249","name":"","type":"fuel","layer":"traffic"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.372482,31.70825],[74.372925,31.708537],[74.372941,31.707828],[74.372507,31.707825],[74.372482,31.70825]]]},"properties":{"osm_id":"1244563250","name":"","type":"fuel","layer":"traffic"}}

@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.943795,30.339871],[66.944036,30.340408],[66.944304,30.340292],[66.944057,30.339797],[66.943795,30.339871]]]},"properties":{"osm_id":"653436565","name":"Al-Dubai Restaurant","type":"building","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[66.949515,30.354077],[66.949619,30.354267],[66.949722,30.354225],[66.949618,30.354035],[66.949515,30.354077]]]},"properties":{"osm_id":"1456978931","name":"","type":"train_station","layer":"buildings"}}

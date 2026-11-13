@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="preconnect" href="https://server.arcgisonline.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Land Audit System</title>
@@ -72,9 +75,13 @@
       <input type="text" id="customUrl" placeholder="https://.../{z}/{x}/{y}.png"></div>
     <div class="row"><label>Auto-detect mode</label>
       <select id="mode">
-        <option value="vector_building">OSM vector: buildings (exact)</option>
-        <option value="vector_plot">OSM vector: numbered plots (place=plot)</option>
-        <option value="vector_landuse">OSM vector: land-use areas (exact)</option>
+        <option value="local_building">Local data: buildings (offline, fast)</option>
+        <option value="local_landuse">Local data: land-use areas</option>
+        <option value="local_other">Local data: other areas (shops, POIs, parking...)</option>
+        <option value="vector_building">OSM vector: buildings (live, may be busy)</option>
+        <option value="vector_plot">OSM vector: numbered plots (live)</option>
+        <option value="vector_all">OSM vector: EVERYTHING (shows each shape's tag; live)</option>
+        <option value="vector_landuse">OSM vector: land-use areas (live)</option>
         <option value="lines">Image: dark boundary lines</option>
         <option value="edges">Image: colour edges (weak)</option>
       </select></div>
@@ -132,17 +139,18 @@ L.Edit.PolyVerticesEdit.mergeOptions({ touchIcon: L.Edit.PolyVerticesEdit.protot
 L.Draw.Polyline.mergeOptions({ touchIcon: L.Draw.Polyline.prototype.options.icon });
 
 // allow zooming past the last real tile level (tiles are enlarged), so corners can be placed precisely
-const map = L.map('map', { maxZoom: 23 }).setView([33.6844, 73.0479], 17);
+const map = L.map('map', { maxZoom: 23, preferCanvas: true }).setView([33.6844, 73.0479], 17);
 const layers = {
-  osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 23, attribution: '© OpenStreetMap contributors' }),
-  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, attribution: 'Esri, Maxar, Earthstar Geographics' })
+  osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 23, updateWhenZooming: false, keepBuffer: 4, attribution: '© OpenStreetMap contributors' }),
+  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, updateWhenZooming: false, keepBuffer: 4, attribution: 'Esri, Maxar, Earthstar Geographics' })
 };
 let base = layers.osm.addTo(map), customLayer = null;
 
 const areaGroup = new L.FeatureGroup().addTo(map);   // the selection rectangle
-const plotsGroup = new L.FeatureGroup().addTo(map);  // all plots (editable)
+const plotsGroup = new L.FeatureGroup().addTo(map);  // every plot (what you see)
+const editGroup = new L.FeatureGroup();               // the plots the edit tool may change (not drawn itself)
 map.addControl(new L.Control.Draw({
-  edit: { featureGroup: plotsGroup, remove: false },
+  edit: { featureGroup: editGroup, remove: false },
   draw: {
     rectangle: { shapeOptions: { color: '#d97706', weight: 2, fillOpacity: 0.05 } },
     polygon: { allowIntersection: false, showArea: false, shapeOptions: { color: COLORS.manual, weight: 2 } },
@@ -179,16 +187,46 @@ function tipText(p) {
   return esc(p.id.replace('PLOT-', 'P')) + lab;
 }
 
-function makeLayer(p) {
+const LABEL_LIMIT = 150;   // permanent labels only up to this many plots (otherwise on hover)
+const TABLE_LIMIT = 300;   // table rows shown (all plots stay on the map and in the exports)
+const EDIT_ALL_LIMIT = 300;
+
+function tipOptions(perm) {
+  return perm ? { permanent: true, direction: 'center', className: 'plot-label' } : { sticky: true, direction: 'top', className: 'plot-label' };
+}
+
+function makeLayer(p, perm) {
   const color = COLORS[p.props.status] || COLORS.manual;
-  let layer = null;
-  L.geoJSON({ type: 'Feature', properties: {}, geometry: p.geometry }, { style: { color, weight: 2, fillOpacity: 0.25 } })
-    .eachLayer(l => { layer = l; });
+  const layer = L.GeoJSON.geometryToLayer({ type: 'Feature', properties: {}, geometry: p.geometry }, {});
+  layer.setStyle({ color, weight: 2, fillOpacity: 0.25 });
   layer._plotId = p.id;
-  layer.bindTooltip(tipText(p), { permanent: true, direction: 'center', className: 'plot-label' });
+  layer.bindTooltip(tipText(p), tipOptions(perm));
+  p._perm = perm;
   layer.on('click', () => selectRow(p.id));
   p.layer = layer;
   plotsGroup.addLayer(layer);
+}
+
+function dropLayer(p) {
+  if (p.layer) { plotsGroup.removeLayer(p.layer); editGroup.removeLayer(p.layer); }
+}
+
+function applyLabels() {
+  const perm = plots.length <= LABEL_LIMIT;
+  plots.forEach(p => {
+    if (!p.layer || p._perm === perm) return;
+    p.layer.unbindTooltip(); p.layer.bindTooltip(tipText(p), tipOptions(perm)); p._perm = perm;
+  });
+}
+
+function syncEditGroup() {
+  const all = plots.length <= EDIT_ALL_LIMIT;
+  plots.forEach(p => {
+    if (!p.layer) return;
+    const want = all || p.props.status !== 'auto_detected' || p.props.edited;
+    const has = editGroup.hasLayer(p.layer);
+    if (want && !has) editGroup.addLayer(p.layer); else if (!want && has) editGroup.removeLayer(p.layer);
+  });
 }
 
 async function addPlots(items) {
@@ -197,6 +235,7 @@ async function addPlots(items) {
     const m = await postJson('/api/measure', { geometries: need.map(i => i.geometry) });
     need.forEach((it, i) => { it.props = Object.assign({}, it.props || {}, m.props[i]); });
   }
+  const perm = plots.length + items.length <= LABEL_LIMIT;
   items.forEach(it => {
     const id = 'PLOT-' + String(nextNum++).padStart(4, '0');
     const props = Object.assign({}, it.props);
@@ -204,7 +243,7 @@ async function addPlots(items) {
     props.status = it.status || props.status || 'manual';
     const p = { id, geometry: it.geometry, props };
     plots.push(p);
-    makeLayer(p);
+    makeLayer(p, perm);
   });
   refresh();
 }
@@ -212,7 +251,7 @@ async function addPlots(items) {
 function removePlot(id) {
   const p = plots.find(x => x.id === id);
   if (!p) return;
-  if (p.layer) plotsGroup.removeLayer(p.layer);
+  dropLayer(p);
   plots = plots.filter(x => x.id !== id);
   refresh();
 }
@@ -223,6 +262,7 @@ function summary() {
 }
 
 function refresh() {
+  applyLabels(); syncEditGroup();
   renderTable();
   const has = plots.length > 0;
   $('expGeo').disabled = $('expCsv').disabled = $('clearAll').disabled = !has;
@@ -233,7 +273,7 @@ function refresh() {
 function renderTable() {
   const u = $('unit').value; $('unitHead').textContent = unitNames[u];
   const tb = document.querySelector('#tbl tbody'); tb.innerHTML = '';
-  plots.forEach(p => {
+  plots.slice(0, TABLE_LIMIT).forEach(p => {
     const tr = document.createElement('tr'); tr.dataset.id = p.id;
     const c1 = document.createElement('td');
     const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = COLORS[p.props.status] || COLORS.manual;
@@ -248,6 +288,11 @@ function renderTable() {
     tr.addEventListener('click', () => { selectRow(p.id); if (p.layer) map.fitBounds(p.layer.getBounds().pad(2), { maxZoom: 22 }); });
     tb.appendChild(tr);
   });
+  if (plots.length > TABLE_LIMIT) {
+    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 5; td.style.color = '#52606d';
+    td.textContent = `Showing the first ${TABLE_LIMIT} of ${plots.length.toLocaleString()} plots. All of them are on the map and in the exports; use the search box to find one.`;
+    tr.appendChild(td); tb.appendChild(tr);
+  }
 }
 $('unit').addEventListener('change', renderTable);
 
@@ -257,17 +302,21 @@ function selectRow(id) {
 }
 
 // ---------- persistence (browser localStorage) ----------
-function save() {
+let saveTimer = null;
+function doSave() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({ nextNum, plots: plots.map(p => ({ id: p.id, geometry: p.geometry, props: p.props })) }));
-  } catch (e) { /* storage unavailable: ignore */ }
+  } catch (e) { /* storage full or unavailable: the plots stay on screen and in the exports */ }
 }
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 500); }
+window.addEventListener('beforeunload', () => { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; doSave(); } });   // flush a pending save
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
     if (!d || !Array.isArray(d.plots)) return;
     nextNum = d.nextNum || 1;
-    d.plots.forEach(p => { const q = { id: p.id, geometry: p.geometry, props: p.props }; plots.push(q); makeLayer(q); });
+    const perm = d.plots.length <= LABEL_LIMIT;
+    d.plots.forEach(p => { const q = { id: p.id, geometry: p.geometry, props: p.props }; plots.push(q); makeLayer(q, perm); });
     if (plots.length) { refresh(); map.fitBounds(plotsGroup.getBounds().pad(0.2)); setStatus('Restored ' + summary()); }
   } catch (e) { /* ignore corrupt storage */ }
 }
@@ -380,7 +429,7 @@ $('detect').addEventListener('click', async () => {
       data = await serverDetect();
     }
     // replace previous (unedited) auto-detected plots, keep traced / imported / edited ones
-    plots.filter(p => p.props.status === 'auto_detected' && !p.props.edited).forEach(p => { plotsGroup.removeLayer(p.layer); });
+    plots.filter(p => p.props.status === 'auto_detected' && !p.props.edited).forEach(p => { dropLayer(p); });
     plots = plots.filter(p => !(p.props.status === 'auto_detected' && !p.props.edited));
     await addPlots((data.features || []).map(f => ({ geometry: f.geometry, props: f.properties, status: 'auto_detected' })));
     const w = (data.warnings || []).join(' ');
@@ -408,7 +457,7 @@ $('file').addEventListener('change', async () => {
 // ---------- clear / export ----------
 $('clearAll').addEventListener('click', () => {
   if (!confirm('Remove all ' + plots.length + ' plots? This cannot be undone.')) return;
-  plotsGroup.clearLayers(); plots = []; nextNum = 1; refresh();
+  plotsGroup.clearLayers(); editGroup.clearLayers(); plots = []; nextNum = 1; refresh();
 });
 
 function download(name, text, type) {
@@ -494,6 +543,12 @@ $('q').addEventListener('keydown', e => {
   if (e.key === 'Enter') runSearch();
   if (e.key === 'Escape') { $('qres').innerHTML = ''; searchGroup.clearLayers(); }
 });
+
+// use the local data automatically when the server has it (no public-server limits)
+fetch('/api/capabilities').then(r => r.json()).then(c => {
+  if (c.local_building) $('mode').value = 'local_building';
+  else $('mode').value = 'vector_building';
+}).catch(() => { /* keep the default */ });
 
 load();
 </script>

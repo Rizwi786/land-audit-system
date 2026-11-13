@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.320028,36.110026],[73.320093,36.110031],[73.320098,36.109974],[73.320033,36.109968],[73.320028,36.110026]]]},"properties":{"osm_id":"396677774","name":"","type":"water_mill","layer":"pois"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.323836,36.111108],[73.323903,36.111213],[73.324059,36.111114],[73.324013,36.111041],[73.323923,36.111098],[73.323903,36.111065],[73.323836,36.111108]]]},"properties":{"osm_id":"396677838","name":"Govt. Middle School","type":"school","layer":"pois"}}

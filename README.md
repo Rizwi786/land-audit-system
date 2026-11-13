@@ -10,6 +10,44 @@ Double-click `run.bat`, or:
     python app.py
     # open http://127.0.0.1:5000
 
+## All of Pakistan, offline and fast (recommended)
+Do this ONCE. Afterwards a rectangle in ANY city works offline, no per-city steps:
+
+    pip install -r requirements.txt
+    python build_pakistan_tiles.py --download          (downloads the Geofabrik zip, then builds the tiles)
+    python build_pakistan_tiles.py                     (if pakistan-latest-free.shp.zip is already in this folder)
+    python build_pakistan_tiles.py --bbox 72.85 33.55 73.25 33.85     (only one region: faster, smaller)
+
+It splits buildings / land use / other areas into ~11 km tiles in `data/tiles/`. The app then loads only the
+tiles under the rectangle (about 0.1 s the first time, a few ms after). Update later by re-running with a
+fresh download. Do NOT commit `data/tiles/` to GitHub (add `data/tiles/` to .gitignore): it is large.
+The whole country is too big for Vercel; run it on your computer or a VPS (a server with a disk).
+Tests: `python test_tiles.py`
+
+## Local data for ONE area (older, simple way)
+The live OSM modes depend on public Overpass servers that are often busy or rate-limited.
+Instead, keep your city's OSM data locally:
+1. Download a shapefile zip, e.g. Geofabrik: https://download.geofabrik.de/asia/pakistan.html -> `pakistan-latest-free.shp.zip`
+   (or a small city extract from BBBike if it offers the Shapefile format).
+2. Run (WEST SOUTH EAST NORTH; this box covers Islamabad):
+
+       python prepare_local_data.py pakistan-latest-free.shp.zip --bbox 72.85 33.55 73.25 33.85
+
+   This writes `data/buildings.geojson`, `data/landuse.geojson` and `data/other.geojson`
+   (other = every other polygon layer: shops/POIs, parking, transport, places of worship...; each shape
+   shows its layer, e.g. "pois: supermarket"). Use `--only other` to (re)build just the extra layers.
+3. Restart the app: "Local data: buildings" is selected automatically. Instant, offline.
+4. For Vercel: commit the `data` folder (keep files small, GitHub limit is 100 MB per file; clip to your demo area).
+Note: this is the same OSM content, just reliable. Where OSM has no plot/building polygons, trace or import them.
+Test: `python test_local.py`
+
+## Download the data of a selected area
+Draw a rectangle (or search a city and press "Use the current map view as the area"), choose GeoJSON or
+Shapefile, press "Download area data (ZIP)". The ZIP has buildings / landuse / other files (each shape with
+area in m2, sq ft, marla, kanal, acre) plus a README with the OpenStreetMap attribution (ODbL).
+Needs the local data files (see above). Online (Vercel) downloads are limited to about 4 MB.
+Test: `python test_export.py`
+
 ## Main workflow (works on ANY map)
 1. **Trace a plot**: click the polygon tool (⬠, top-left of map), click each corner, click the first point to finish.
    The plot gets a unique ID (PLOT-0001...) and its area in marla / kanal / m2 / sq ft / acre.

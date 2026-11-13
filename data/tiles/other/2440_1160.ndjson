@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[64.013755,26.043976],[64.015104,26.043774],[64.016722,26.042805],[64.016609,26.042018],[64.013755,26.043976]]]},"properties":{"osm_id":"406326634","name":"","type":"riverbank","layer":"water"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[64.016473,26.048211],[64.016665,26.048834],[64.018295,26.049569],[64.024191,26.050819],[64.016473,26.048211]]]},"properties":{"osm_id":"406326635","name":"","type":"riverbank","layer":"water"}}

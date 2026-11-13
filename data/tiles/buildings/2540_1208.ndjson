@@ -1,0 +1,2 @@
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.094535,30.834569],[74.094622,30.834652],[74.094709,30.834736],[74.094782,30.834671],[74.0947,30.834601],[74.0946,30.834515],[74.094535,30.834569]]]},"properties":{"osm_id":"1205927223","name":"","type":"building","layer":"buildings"}}
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.034245,30.859226],[74.034256,30.859412],[74.034453,30.859402],[74.034441,30.859217],[74.034245,30.859226]]]},"properties":{"osm_id":"1264410248","name":"saqlain","type":"house","layer":"buildings"}}
