@@ -3,7 +3,7 @@ Land Audit System - Web App (Phase 2 prototype)
 Select an area on the map -> system fetches map tiles for that area ->
 detects plot boundaries -> assigns unique IDs -> calculates areas.
 
-Run:  python app.py      then open  http://127.0.0.1:5001
+Run:  python app.py      then open  http://127.0.0.1:5000
 """
 import base64
 import hmac
@@ -38,7 +38,7 @@ MAX_ZOOM = 19
 CONTACT = os.environ.get("LAND_AUDIT_CONTACT", "land-audit-prototype")
 HEADERS = {"User-Agent": f"LandAuditSystem/0.2 (+{CONTACT})",
            "Accept": "*/*",
-           "Referer": "http://127.0.0.1:5001/"}
+           "Referer": "http://127.0.0.1:5000/"}
 
 TILE_SOURCES = {
     "osm": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -692,6 +692,16 @@ def api_search():
         return jsonify(error=str(ex)), 502
 
 
+import subprocess
+
 if __name__ == "__main__":
-    os.makedirs("static", exist_ok=True)
-    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5001)), debug=False)
+    os.makedirs("static", exist_ok=True)
+    port = int(os.environ.get("PORT", 5000))
+    
+    # Automatically kill any stale process holding the port on Linux containers (Streamlit Cloud)
+    try:
+        subprocess.run(f"fuser -k {port}/tcp", shell=True, capture_output=True)
+    except Exception:
+        pass
+
+    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=port, debug=False)
