@@ -169,21 +169,14 @@ async function api(url, opts) {
   const res = await fetch(url, opts);
   let data = {};
   try { data = await res.json(); } catch (e) { /* non-JSON error page */ }
-  if (!res.ok) {
-    let msg = data.error;
-    if (!msg) msg = (res.status === 504 || res.status === 502)
-      ? 'The server timed out (the OpenStreetMap data service may be busy). Please try again, or select a smaller area.'
-      : 'Server error ' + res.status;
-    throw new Error(msg);
-  }
+  if (!res.ok) throw new Error(data.error || ('Server error ' + res.status));
   return data;
 }
 const postJson = (url, body) => api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 // ---------- plots ----------
 function tipText(p) {
-  const L0 = String(p.props.label || '');
-  const lab = L0 ? ' · ' + esc(L0.length > 16 ? L0.slice(0, 15) + '…' : L0) : '';
+  const lab = p.props.label ? ' · ' + esc(p.props.label) : '';
   return esc(p.id.replace('PLOT-', 'P')) + lab;
 }
 
@@ -362,72 +355,16 @@ function applyCustom() {
   if (url) customLayer = L.tileLayer(url, { maxNativeZoom: 20, maxZoom: 23 }).addTo(map);
 }
 
-// ---------- Overpass (OpenStreetMap data) fetched by the browser ----------
-// The public servers allow only ~2 queries per minute per IP, so: cache results, and
-// try a server that failed in the last minute only as a last resort.
-const FAIL_KEY = 'ovp_fail_';
-function recentlyFailed(u) { try { return Date.now() - (+sessionStorage.getItem(FAIL_KEY + new URL(u).host) || 0) < 60000; } catch (e) { return false; } }
-function markFailed(u) { try { sessionStorage.setItem(FAIL_KEY + new URL(u).host, String(Date.now())); } catch (e) { /* ignore */ } }
-const cacheKey = (mode, bb) => 'ovp:' + mode + ':' + bb.map(v => v.toFixed(5)).join(',');
-function cacheGet(k) { try { const o = JSON.parse(sessionStorage.getItem(k) || 'null'); if (o && Date.now() - o.t < 1800000) return o.d; } catch (e) { /* ignore */ } return null; }
-function cachePut(k, d) { try { sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), d })); } catch (e) { /* too big or unavailable */ } }
-
-async function overpassFromBrowser(query, urls) {
-  const ordered = urls.filter(u => !recentlyFailed(u)).concat(urls.filter(recentlyFailed));
-  const errors = []; let allNetwork = true;
-  for (const url of ordered) {
-    const host = new URL(url).host;
-    const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 35000);
-    try {
-      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal: ctrl.signal });
-      if (!r.ok) { errors.push(host + ': HTTP ' + r.status); allNetwork = false; markFailed(url); continue; }
-      const j = await r.json();
-      if (String(j.remark || '').toLowerCase().includes('runtime error')) { errors.push(host + ': query timed out'); allNetwork = false; markFailed(url); continue; }
-      return j;
-    } catch (e) {
-      markFailed(url);
-      if (e.name === 'AbortError') { errors.push(host + ': timeout'); allNetwork = false; }
-      else errors.push(host + ': error page (busy or rate-limited)');
-    } finally { clearTimeout(timer); }
-  }
-  const err = new Error('The public OpenStreetMap servers are busy or limiting requests (' + errors.join('; ') +
-    '). They allow only about 2 queries per minute per user: wait a minute and try again.');
-  err.networkOnly = allNetwork;
-  throw err;
-}
-
 // ---------- auto detect ----------
 $('detect').addEventListener('click', async () => {
   if (!bbox) return;
-  $('detect').disabled = true; setStatus('Detecting plots… (the OpenStreetMap server can take up to a minute)');
+  $('detect').disabled = true; setStatus('Detecting plots…');
   try {
-    const mode = $('mode').value;
-    const serverDetect = () => postJson('/api/detect', {
+    const data = await postJson('/api/detect', {
       bbox, source: $('source').value, custom_url: $('customUrl').value.trim(),
-      mode, gap_close: +$('gap').value,
+      mode: $('mode').value, gap_close: +$('gap').value,
       min_area_m2: +$('minArea').value, max_area_m2: +$('maxArea').value
     });
-    let data;
-    if (mode.startsWith('vector')) {
-      // OSM data: the browser asks the Overpass servers directly (own IP, no serverless time limit);
-      // the server then turns the result into polygons, IDs and areas.
-      try {
-        const q = await postJson('/api/vector_query', { bbox, mode });
-        setStatus('Asking the OpenStreetMap servers… (can take up to a minute)');
-        const ck = cacheKey(mode, bbox);
-        let raw = cacheGet(ck);
-        if (raw) setStatus('Using the result fetched a moment ago…');
-        else { raw = await overpassFromBrowser(q.query, q.urls); cachePut(ck, raw); }
-        setStatus('Processing polygons…');
-        data = await postJson('/api/vector_parse', { bbox, mode, data: raw });
-      } catch (err) {
-        if (!err.networkOnly) throw err;
-        setStatus('Browser could not reach OSM directly; trying through the server…');
-        data = await serverDetect();            // fallback (e.g. a firewall blocks the browser)
-      }
-    } else {
-      data = await serverDetect();
-    }
     // replace previous (unedited) auto-detected plots, keep traced / imported / edited ones
     plots.filter(p => p.props.status === 'auto_detected' && !p.props.edited).forEach(p => { dropLayer(p); });
     plots = plots.filter(p => !(p.props.status === 'auto_detected' && !p.props.edited));
