@@ -695,13 +695,13 @@ def api_search():
 import subprocess
 
 if __name__ == "__main__":
-    os.makedirs("static", exist_ok=True)
-    port = int(os.environ.get("PORT", 5000))
-    
-    # Automatically kill any stale process holding the port on Linux containers (Streamlit Cloud)
-    try:
-        subprocess.run(f"fuser -k {port}/tcp", shell=True, capture_output=True)
-    except Exception:
-        pass
+    os.makedirs("static", exist_ok=True)
+    port = int(os.environ.get("PORT", 5000))
 
-    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=port, debug=False)
+    # Automatically kill any stale process holding the port on Linux containers (Streamlit Cloud)
+    try:
+        subprocess.run(f"fuser -k {port}/tcp", shell=True, capture_output=True)
+    except Exception:
+        pass
+
+    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=port, debug=False)
