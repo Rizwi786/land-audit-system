@@ -3,7 +3,7 @@
   "functions": {
     "app.py": {
       "includeFiles": "{static/**,data/**}",
-      "excludeFiles": "{**/test_*.py,make_sample_map.py,samples/**,output/**,Dockerfile,README.md,run.bat}",
+      "excludeFiles": "{**/test_*.py,make_sample_map.py,samples/**,output/**,Dockerfile,README.md,run.bat,data/tiles/**,**/*.zip,build_pakistan_tiles.py,prepare_local_data.py,.venv/**}",
       "maxDuration": 60
     }
   }
