@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.131788,30.554516],[72.131826,30.554703],[72.131916,30.554691],[72.131876,30.554503],[72.131788,30.554516]]]},"properties":{"osm_id":"1482943903","name":"","type":"train_station","layer":"buildings"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.131714,30.554385],[72.131744,30.554522],[72.131788,30.554516],[72.131876,30.554503],[72.131847,30.554365],[72.131714,30.554385]]]},"properties":{"osm_id":"1482943905","name":"عبدالحکیم ریلوے اسٹیشن","type":"train_station","layer":"buildings"}}

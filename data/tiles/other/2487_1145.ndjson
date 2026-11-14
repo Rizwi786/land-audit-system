@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[68.789434,24.502407],[68.78959,24.502418],[68.789605,24.502256],[68.789448,24.502244],[68.789434,24.502407]]]},"properties":{"osm_id":"1348085548","name":"Government Dispensary Plus Seerani","type":"chemist","layer":"pois"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[68.788965,24.503635],[68.78929,24.503663],[68.789325,24.503325],[68.789,24.503298],[68.788965,24.503635]]]},"properties":{"osm_id":"1348085550","name":"Ali Petrol Pump Seerani","type":"fuel","layer":"traffic"}}

@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[71.108499,31.785873],[71.108527,31.786088],[71.108679,31.786074],[71.108651,31.785859],[71.108499,31.785873]]]},"properties":{"osm_id":"1455505894","name":"","type":"train_station","layer":"buildings"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[71.108447,31.78546],[71.108497,31.785772],[71.10863,31.785757],[71.108579,31.785444],[71.108447,31.78546]]]},"properties":{"osm_id":"1455505895","name":"","type":"train_station","layer":"buildings"}}

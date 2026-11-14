@@ -1,3 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.89963,24.937028],[67.900597,24.938366],[67.903596,24.938815],[67.903524,24.938026],[67.900888,24.935328],[67.89963,24.937028]]]},"properties":{"osm_id":"286259864","name":"","type":"residential","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.999939,24.917724],[68.001229,24.918935],[68.001426,24.917531],[67.999939,24.917724]]]},"properties":{"osm_id":"595236317","name":"","type":"residential","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.98952,24.989751],[67.992417,24.990237],[67.99203,24.988467],[67.989734,24.987884],[67.98952,24.989751]]]},"properties":{"osm_id":"595583538","name":"","type":"residential","layer":"landuse"}}

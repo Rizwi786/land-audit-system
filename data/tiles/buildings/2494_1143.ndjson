@@ -1,3 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[69.403968,24.387447],[69.404,24.387462],[69.404017,24.387431],[69.403985,24.387417],[69.403968,24.387447]]]},"properties":{"osm_id":"268641790","name":"","type":"building","layer":"buildings"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[69.470806,24.383643],[69.47094,24.38369],[69.470965,24.383631],[69.470831,24.383584],[69.470806,24.383643]]]},"properties":{"osm_id":"293953846","name":"","type":"building","layer":"buildings"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[69.471648,24.38418],[69.471807,24.384203],[69.471823,24.384112],[69.471664,24.384089],[69.471648,24.38418]]]},"properties":{"osm_id":"293953850","name":"","type":"building","layer":"buildings"}}

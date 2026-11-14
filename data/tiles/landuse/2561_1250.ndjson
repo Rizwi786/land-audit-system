@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[76.114317,35.028784],[76.114771,35.029055],[76.114866,35.029188],[76.114975,35.029293],[76.115516,35.028995],[76.114827,35.028386],[76.114317,35.028784]]]},"properties":{"osm_id":"1436065002","name":"","type":"commercial","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[76.109775,35.030681],[76.11006,35.031159],[76.110961,35.030805],[76.110657,35.030333],[76.109775,35.030681]]]},"properties":{"osm_id":"1474020519","name":"","type":"recreation_ground","layer":"landuse"}}

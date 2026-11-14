@@ -1,3 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[70.411809,24.371389],[70.412961,24.371902],[70.413525,24.370852],[70.412373,24.370338],[70.411809,24.371389]]]},"properties":{"osm_id":"1240792050","name":"","type":"military","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[70.49259,24.393145],[70.493657,24.393378],[70.493913,24.392405],[70.492847,24.392172],[70.49259,24.393145]]]},"properties":{"osm_id":"1240796152","name":"","type":"military","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[70.443934,24.380538],[70.445001,24.380769],[70.445238,24.379799],[70.444174,24.379581],[70.443934,24.380538]]]},"properties":{"osm_id":"1240796164","name":"","type":"military","layer":"landuse"}}

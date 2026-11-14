@@ -1,3 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.963346,34.31387],[73.963507,34.314277],[73.964048,34.314102],[73.963926,34.313752],[73.963346,34.31387]]]},"properties":{"osm_id":"979300381","name":"","type":"helipad","layer":"transport"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.958946,34.309957],[73.958984,34.310038],[73.959113,34.309999],[73.959078,34.309917],[73.958946,34.309957]]]},"properties":{"osm_id":"979300382","name":"","type":"helipad","layer":"transport"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.933252,34.31842],[73.933255,34.318558],[73.933539,34.318525],[73.93353,34.31839],[73.933252,34.31842]]]},"properties":{"osm_id":"979300383","name":"","type":"helipad","layer":"transport"}}

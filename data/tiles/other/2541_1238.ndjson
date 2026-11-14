@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.108332,33.883709],[74.108774,33.884139],[74.109437,33.883676],[74.108984,33.883264],[74.108332,33.883709]]]},"properties":{"osm_id":"1313481711","name":"DHQ Hospital","type":"hospital","layer":"pois"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[74.133096,33.818451],[74.133205,33.81858],[74.133341,33.818528],[74.133233,33.81839],[74.133096,33.818451]]]},"properties":{"osm_id":"985032013","name":"","type":"helipad","layer":"transport"}}

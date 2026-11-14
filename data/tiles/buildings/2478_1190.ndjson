@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.82383,29.046658],[67.823873,29.047562],[67.825835,29.047612],[67.825725,29.046671],[67.82383,29.046658]]]},"properties":{"osm_id":"1363069859","name":"Civil Hospital Bhaag","type":"hospital","layer":"buildings"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.833523,29.040663],[67.834645,29.042856],[67.836591,29.041985],[67.835747,29.039769],[67.833523,29.040663]]]},"properties":{"osm_id":"1363070273","name":"Govt Degree College Bhaag","type":"college","layer":"buildings"}}

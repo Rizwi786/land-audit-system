@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[63.621377,29.480539],[63.621432,29.480541],[63.621433,29.480497],[63.621378,29.480496],[63.621377,29.480539]]]},"properties":{"osm_id":"1301120255","name":"","type":"observation_tower","layer":"pois"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[63.651157,29.477782],[63.651159,29.477825],[63.651215,29.477822],[63.651212,29.477779],[63.651157,29.477782]]]},"properties":{"osm_id":"1301120256","name":"","type":"observation_tower","layer":"pois"}}

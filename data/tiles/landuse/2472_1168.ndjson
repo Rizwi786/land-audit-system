@@ -1,3 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.239892,26.868489],[67.24087,26.868611],[67.240955,26.868078],[67.239976,26.867955],[67.239892,26.868489]]]},"properties":{"osm_id":"594729664","name":"","type":"industrial","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.228045,26.847345],[67.229566,26.847955],[67.229932,26.847418],[67.228281,26.846917],[67.228045,26.847345]]]},"properties":{"osm_id":"594729665","name":"","type":"industrial","layer":"landuse"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[67.197378,26.831528],[67.199798,26.83298],[67.200166,26.831169],[67.197792,26.830886],[67.197378,26.831528]]]},"properties":{"osm_id":"594729666","name":"","type":"orchard","layer":"landuse"}}

@@ -1,2 +1,0 @@
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[70.950538,28.93159],[70.954302,28.931647],[70.954269,28.930319],[70.950542,28.930223],[70.950538,28.93159]]]},"properties":{"osm_id":"1135071216","name":"THQ Hospital LiaqatPur","type":"hospital","layer":"pois"}}
-{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[70.940278,28.93739],[70.940289,28.937585],[70.940738,28.937572],[70.940738,28.937249],[70.940738,28.937174],[70.940278,28.93739]]]},"properties":{"osm_id":"1137295904","name":"Rescue 1122 Liaqatpur","type":"hospital","layer":"pois"}}
