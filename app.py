@@ -3,7 +3,7 @@ Land Audit System - Web App (Phase 2 prototype)
 Select an area on the map -> system fetches map tiles for that area ->
 detects plot boundaries -> assigns unique IDs -> calculates areas.
 
-Run:  python app.py      then open  http://127.0.0.1:5001
+Run:  python app.py      then open  http://127.0.0.1:5000
 """
 import base64
 import hmac
@@ -38,7 +38,7 @@ MAX_ZOOM = 19
 CONTACT = os.environ.get("LAND_AUDIT_CONTACT", "land-audit-prototype")
 HEADERS = {"User-Agent": f"LandAuditSystem/0.2 (+{CONTACT})",
            "Accept": "*/*",
-           "Referer": "http://127.0.0.1:5001/"}
+           "Referer": "http://127.0.0.1:5000/"}
 
 TILE_SOURCES = {
     "osm": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
