@@ -3,7 +3,7 @@
 Two layouts, both offline and free of public-server limits:
 
 1. TILES (whole country; built once by build_pakistan_tiles.py):
-       data/tiles/index.json, data/tiles/<buildings|landuse|other>/<x>_<y>.ndjson
+       data/tiles/index.json, data/tiles/<buildings|landuse|other>/<x>_<y>.ndjson.gz (or .ndjson)
    A query loads only the few tiles under the rectangle (cached in memory).
 2. SINGLE FILES (one area; made by prepare_local_data.py):
        data/buildings.geojson, data/landuse.geojson, data/other.geojson
@@ -11,6 +11,7 @@ Two layouts, both offline and free of public-server limits:
 Tiles are used when they exist for a kind, otherwise the single file.
 Each feature is a polygon with properties: osm_id, name, type, layer.
 """
+import gzip
 import json
 import math
 import os
@@ -74,19 +75,22 @@ def _load_tile(kind, ix, iy):
     if key in _tiles:
         _tiles.move_to_end(key)
         return _tiles[key]
-    path = os.path.join(DATA_DIR, "tiles", KIND_DIR[kind], f"{ix}_{iy}.ndjson")
+    base = os.path.join(DATA_DIR, "tiles", KIND_DIR[kind], f"{ix}_{iy}.ndjson")
     geoms, props = [], []
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                ft = json.loads(line)
-                g = shape(ft["geometry"])
-                if g.geom_type in ("Polygon", "MultiPolygon") and not g.is_empty:
-                    geoms.append(g)
-                    props.append(ft.get("properties") or {})
+    for path, opener in ((base + ".gz", lambda p: gzip.open(p, "rt", encoding="utf-8")),
+                         (base, lambda p: open(p, encoding="utf-8"))):
+        if os.path.exists(path):
+            with opener(path) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    ft = json.loads(line)
+                    g = shape(ft["geometry"])
+                    if g.geom_type in ("Polygon", "MultiPolygon") and not g.is_empty:
+                        geoms.append(g)
+                        props.append(ft.get("properties") or {})
+            break
     entry = (geoms, props, STRtree(geoms))
     _tiles[key] = entry
     while len(_tiles) > TILE_CACHE_SIZE:
