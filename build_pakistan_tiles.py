@@ -9,11 +9,12 @@ rectangle anywhere in Pakistan offline and fast (it loads only the few tiles und
     python build_pakistan_tiles.py --bbox 72.85 33.55 73.25 33.85      (only one region: much faster / smaller)
     python build_pakistan_tiles.py --only buildings      (rebuild just one kind: buildings landuse other)
 
-Result:  data/tiles/index.json  and  data/tiles/<buildings|landuse|other>/<x>_<y>.ndjson
+Result:  data/tiles/index.json  and  data/tiles/<buildings|landuse|other>/<x>_<y>.ndjson.gz   (gzip; --no-gzip for plain .ndjson)
 Run it again later with a fresh download to update the data. After it finishes just start the app:
 the "Local data" modes use the tiles automatically for every city.
 """
 import argparse
+import gzip
 import json
 import math
 import os
@@ -49,10 +50,10 @@ def download(url, dest):
 
 
 class TileWriter:
-    """Collects features per tile in memory and appends them to .ndjson files in batches."""
+    """Collects features per tile in memory and appends them to .ndjson(.gz) files in batches."""
 
-    def __init__(self, root, flush_at=100000):
-        self.root, self.flush_at, self.n = root, flush_at, 0
+    def __init__(self, root, flush_at=100000, use_gzip=True):
+        self.root, self.flush_at, self.n, self.use_gzip = root, flush_at, 0, use_gzip
         self.buf = defaultdict(list)
         self.counts = defaultdict(lambda: defaultdict(int))
 
@@ -67,8 +68,13 @@ class TileWriter:
         for (kind, ix, iy), lines in self.buf.items():
             d = os.path.join(self.root, KIND_DIR[kind])
             os.makedirs(d, exist_ok=True)
-            with open(os.path.join(d, f"{ix}_{iy}.ndjson"), "a", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
+            text = "\n".join(lines) + "\n"
+            if self.use_gzip:      # each batch becomes one gzip member; many members in one file read fine
+                with gzip.open(os.path.join(d, f"{ix}_{iy}.ndjson.gz"), "ab", compresslevel=6) as f:
+                    f.write(text.encode("utf-8"))
+            else:
+                with open(os.path.join(d, f"{ix}_{iy}.ndjson"), "a", encoding="utf-8") as f:
+                    f.write(text)
         self.buf.clear()
         self.n = 0
 
@@ -93,6 +99,7 @@ def main():
                     help="only this region (default: everything)")
     ap.add_argument("--only", nargs="+", choices=list(KIND_DIR), help="rebuild only these kinds")
     ap.add_argument("--keep-all-layers", action="store_true", help="also keep boundary/locality layers")
+    ap.add_argument("--no-gzip", action="store_true", help="write plain .ndjson files (about 5x bigger; gzip is the default)")
     a = ap.parse_args()
 
     if not os.path.exists(a.zip):
@@ -113,7 +120,7 @@ def main():
         index["kinds"].pop(KIND_DIR[k], None)
     os.makedirs(root, exist_ok=True)
 
-    w = TileWriter(root)
+    w = TileWriter(root, use_gzip=not a.no_gzip)
     t0 = time.time()
     with zipfile.ZipFile(a.zip) as zf:
         names = zf.namelist()
