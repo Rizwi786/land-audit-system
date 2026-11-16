@@ -34,7 +34,10 @@ import math
 import os
 import sys
 
-import cv2
+try:
+    import cv2
+except ImportError:      # the online (Vercel) version runs without OpenCV; only the image-based modes need it
+    cv2 = None
 import numpy as np
 from pyproj import Transformer
 from shapely.geometry import Polygon, mapping

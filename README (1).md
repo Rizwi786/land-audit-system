@@ -18,10 +18,14 @@ Do this ONCE. Afterwards a rectangle in ANY city works offline, no per-city step
     python build_pakistan_tiles.py                     (if pakistan-latest-free.shp.zip is already in this folder)
     python build_pakistan_tiles.py --bbox 72.85 33.55 73.25 33.85     (only one region: faster, smaller)
 
-It splits buildings / land use / other areas into ~11 km tiles in `data/tiles/`. The app then loads only the
+It splits buildings / land use / other areas into ~11 km tiles in `data/tiles/` (gzip-compressed `.ndjson.gz`,
+about 5x smaller than plain; `--no-gzip` for plain files). The app then loads only the
 tiles under the rectangle (about 0.1 s the first time, a few ms after). Update later by re-running with a
-fresh download. Do NOT commit `data/tiles/` to GitHub (add `data/tiles/` to .gitignore): it is large.
-The whole country is too big for Vercel; run it on your computer or a VPS (a server with a disk).
+fresh download.
+ONLINE (Vercel): the function bundle limit is 500 MB. Libraries are ~122 MB without OpenCV, so the gzip tiles must stay
+under about 350 MB. Commit `data/tiles/**/*.ndjson.gz` (never the plain `.ndjson`: add `data/tiles/**/*.ndjson` to .gitignore).
+Check the size first: `powershell -c "(Get-ChildItem data\\tiles -Recurse -File | Measure-Object Length -Sum).Sum/1MB"`.
+If it is too big, build only the cities you need with --bbox, or run the app on your computer / a VPS.
 Tests: `python test_tiles.py`
 
 ## Local data for ONE area (older, simple way)
@@ -40,6 +44,10 @@ Instead, keep your city's OSM data locally:
 4. For Vercel: commit the `data` folder (keep files small, GitHub limit is 100 MB per file; clip to your demo area).
 Note: this is the same OSM content, just reliable. Where OSM has no plot/building polygons, trace or import them.
 Test: `python test_local.py`
+
+## Packages
+`requirements.txt` = everything the online version needs (small). `requirements-images.txt` = OpenCV, only for the
+image-based detection modes on your computer: `pip install -r requirements.txt -r requirements-images.txt`.
 
 ## Main workflow (works on ANY map)
 1. **Trace a plot**: click the polygon tool (⬠, top-left of map), click each corner, click the first point to finish.

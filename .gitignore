@@ -6,5 +6,10 @@ output_*/
 .venv/
 samples/
 pakistan-latest-free.shp.zipdata/tiles/
-data/tiles/
-data/tiles/
+data/tiles/**/*.ndjson
+data/tiles/**/*.ndjson
+data/tiles/**/*.ndjson
+data/tiles/**/*.ndjson
+data/tiles/**/*.ndjson
+data/tiles/**/*.ndjson
+pakistan-latest-free.shp.zip
