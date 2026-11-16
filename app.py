@@ -17,7 +17,10 @@ import zipfile
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 
-import cv2
+try:
+    import cv2
+except ImportError:      # the online (Vercel) version runs without OpenCV; only the image-based modes need it
+    cv2 = None
 import numpy as np
 import requests
 import shapely
@@ -95,6 +98,12 @@ def choose_zoom(bbox, max_zoom=MAX_ZOOM):
 
 
 # ---------------- Tile fetching ----------------
+def _need_cv2():
+    if cv2 is None:
+        raise RuntimeError("The image-based modes need OpenCV (pip install -r requirements-images.txt). "
+                           "They are not part of the online version: use the OSM or local-data modes.")
+
+
 def fetch_tile(url_tpl, z, x, y):
     """Return a BGR tile image. Replaced by a mock in tests."""
     url = url_tpl.format(z=z, x=x, y=y)
@@ -112,6 +121,7 @@ def fetch_tile(url_tpl, z, x, y):
 
 def stitch(bbox, z, url_tpl):
     """Download + stitch tiles, crop exactly to bbox. Returns (image, origin_px)."""
+    _need_cv2()
     w, s, e, n = bbox
     px0, py1 = lonlat_to_world_px(w, s, z)   # left, bottom
     px1, py0 = lonlat_to_world_px(e, n, z)   # right, top
@@ -694,4 +704,4 @@ def api_search():
 
 if __name__ == "__main__":
     os.makedirs("static", exist_ok=True)
-    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5001)), debug=False)
+    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5000)), debug=False)
