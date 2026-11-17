@@ -341,7 +341,7 @@ def _features_from_polys(bbox, kind, raw, id_prefix="PLOT-", source="osm"):
     if not items:
         if source == "local":
             return {"type": "FeatureCollection", "features": [], "n_plots": 0, "mode": "vector",
-                    "warnings": ["No polygons in your local data for this area. Is the area inside the extract you prepared?"]}
+                    "warnings": ["Nothing mapped here: OpenStreetMap often has no outlines for village buildings and for individual plots. Trace the plot by hand or import your survey data."]}
         return {"type": "FeatureCollection", "features": [], "n_plots": 0, "mode": "vector",
                 "warnings": [{"plot": "No place=plot polygons here. Numbered dotted lines on OSM are usually address ranges, not plots. Try 'buildings'.",
                                       "landuse": "No land-use polygons here. Try 'buildings' or a larger area.",
