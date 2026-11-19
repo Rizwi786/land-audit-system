@@ -25,7 +25,7 @@ import numpy as np
 import requests
 import shapely
 from flask import Flask, Response, jsonify, request, send_from_directory
-from pyproj import Transformer
+from pyproj import Geod, Transformer
 from shapely.geometry import mapping, shape
 
 from plot_extractor import (area_units, build_line_mask, estimate_line_width,
@@ -355,10 +355,10 @@ def _features_from_polys(bbox, kind, raw, id_prefix="PLOT-", source="osm"):
 
     feats, total = [], 0.0
     for i, (geo, metric, osm_id, tags) in enumerate(items, 1):
-        sqm = metric.area
+        sqm, perim = geodesic_area_perimeter(geo)          # ellipsoid area of the lon/lat outline
         total += sqm
         props = {"plot_id": f"{id_prefix}{i:04d}", **area_units(sqm),
-                 "perimeter_m": round(metric.length, 2), "status": "osm_vector",
+                 "perimeter_m": round(perim, 2), "status": "osm_vector",
                  "osm_id": osm_id,
                  "type": tags.get("building") or tags.get("landuse") or tags.get("place") or "",
                  "name": tags.get("name", ""),
@@ -418,12 +418,32 @@ def detect_vector(bbox, kind="building", id_prefix="PLOT-"):
 
 
 # ---------------- Measure + Import ----------------
+_GEOD = Geod(ellps="WGS84")
+
+
+def geodesic_area_perimeter(geom):
+    """Area (m2) and perimeter (m) of a lon/lat Polygon / MultiPolygon on the WGS84 ellipsoid.
+    Independent of any map projection or UTM zone; holes are subtracted."""
+    polys = list(geom.geoms) if geom.geom_type == "MultiPolygon" else [geom]
+    area = perim = 0.0
+    for p in polys:
+        x, y = p.exterior.xy
+        a, l = _GEOD.polygon_area_perimeter(x, y)
+        a = abs(a)
+        for ring in p.interiors:
+            ix, iy = ring.xy
+            ia, il = _GEOD.polygon_area_perimeter(ix, iy)
+            a -= abs(ia)
+            l += il
+        area += a
+        perim += l
+    return area, perim
+
+
 def measure_geometry(geom):
-    """Shapely polygon in lon/lat -> area/perimeter properties (UTM zone of its own centroid)."""
-    c = geom.centroid
-    to_utm = Transformer.from_crs(4326, utm_epsg_for(c.x, c.y), always_xy=True).transform
-    m = shapely.transform(geom, lambda a: np.column_stack(to_utm(a[:, 0], a[:, 1])))
-    return {**area_units(m.area), "perimeter_m": round(m.length, 2)}
+    """Shapely polygon in lon/lat -> area/perimeter properties (WGS84 ellipsoid)."""
+    area, perim = geodesic_area_perimeter(geom)
+    return {**area_units(area), "perimeter_m": round(perim, 2)}
 
 
 LABEL_KEYS = ("plot_no", "plotno", "plot_num", "plot", "plot_id", "id", "name", "label")

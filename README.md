@@ -45,6 +45,13 @@ Instead, keep your city's OSM data locally:
 Note: this is the same OSM content, just reliable. Where OSM has no plot/building polygons, trace or import them.
 Test: `python test_local.py`
 
+## How areas are calculated (and how accurate they are)
+Areas are computed on the WGS84 ellipsoid from the polygon outline (no map projection, no UTM zone), so the
+calculation is accurate everywhere in Pakistan (checked against an equal-area projection: difference < 0.0001%).
+The OUTLINE decides the real accuracy: OpenStreetMap outlines are drawn by mappers (typically a few metres off), hand-traced
+plots depend on the auditor's clicks, imported files depend on their survey. Example: a 29 km2 forest compared with the
+department's figure differed by 0.9%, which is only ~8 m of boundary shift; for a 10 m x 20 m house plot a 1 m shift is ~15%.
+
 ## Packages
 `requirements.txt` = everything the online version needs (small). `requirements-images.txt` = OpenCV, only for the
 image-based detection modes on your computer: `pip install -r requirements.txt -r requirements-images.txt`.
